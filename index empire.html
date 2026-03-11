@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EMPIRE — Portfolio Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold: #C9A84C;
+    --gold-bright: #F0C84A;
+    --gold-dim: #7a6025;
+    --black: #080808;
+    --surface: #0f0f0f;
+    --surface2: #161616;
+    --border: #222;
+    --text: #e8e0d0;
+    --muted: #666;
+    --green: #4caf7d;
+    --red: #e05454;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--black);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grain overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 1000;
+    opacity: 0.4;
+  }
+
+  header {
+    border-bottom: 1px solid var(--border);
+    padding: 20px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    background: rgba(8,8,8,0.95);
+    backdrop-filter: blur(10px);
+    z-index: 100;
+  }
+
+  .logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2rem;
+    letter-spacing: 0.15em;
+    color: var(--gold);
+    text-shadow: 0 0 40px rgba(201,168,76,0.3);
+  }
+
+  .logo span {
+    color: var(--text);
+    font-size: 0.9rem;
+    letter-spacing: 0.3em;
+    display: block;
+    margin-top: -6px;
+    font-family: 'DM Mono', monospace;
+    font-weight: 300;
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+  }
+
+  .live-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    color: var(--green);
+    text-transform: uppercase;
+  }
+
+  .live-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(1.4); }
+  }
+
+  main {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 40px;
+  }
+
+  /* Portfolio summary */
+  .summary {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    margin-bottom: 40px;
+    animation: fadeUp 0.6s ease both;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .summary-card {
+    background: var(--surface);
+    padding: 28px 32px;
+  }
+
+  .summary-card:first-child {
+    background: var(--surface2);
+  }
+
+  .card-label {
+    font-size: 0.6rem;
+    letter-spacing: 0.25em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .card-value {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2.4rem;
+    letter-spacing: 0.05em;
+    color: var(--gold-bright);
+    line-height: 1;
+  }
+
+  .card-value.big {
+    font-size: 3.2rem;
+  }
+
+  .card-sub {
+    font-size: 0.65rem;
+    color: var(--muted);
+    margin-top: 6px;
+  }
+
+  .change-positive { color: var(--green); }
+  .change-negative { color: var(--red); }
+
+  /* Add asset */
+  .add-section {
+    margin-bottom: 32px;
+    animation: fadeUp 0.6s 0.1s ease both;
+  }
+
+  .section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.1rem;
+    letter-spacing: 0.2em;
+    color: var(--gold-dim);
+    margin-bottom: 16px;
+    text-transform: uppercase;
+  }
+
+  .add-form {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr auto;
+    gap: 8px;
+  }
+
+  input, select {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.8rem;
+    padding: 12px 16px;
+    outline: none;
+    transition: border-color 0.2s;
+    -webkit-appearance: none;
+  }
+
+  input::placeholder { color: var(--muted); }
+
+  input:focus, select:focus {
+    border-color: var(--gold-dim);
+  }
+
+  select option {
+    background: var(--surface);
+  }
+
+  .btn {
+    background: var(--gold);
+    color: var(--black);
+    border: none;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1rem;
+    letter-spacing: 0.15em;
+    padding: 12px 28px;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+  }
+
+  .btn:hover { background: var(--gold-bright); }
+  .btn:active { transform: scale(0.98); }
+
+  /* Holdings table */
+  .holdings {
+    animation: fadeUp 0.6s 0.2s ease both;
+  }
+
+  .table-header {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr 1fr 40px;
+    padding: 10px 20px;
+    font-size: 0.6rem;
+    letter-spacing: 0.2em;
+    color: var(--muted);
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .holding-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr 1fr 40px;
+    padding: 18px 20px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    transition: background 0.15s;
+    align-items: center;
+    animation: fadeUp 0.4s ease both;
+  }
+
+  .holding-row:hover {
+    background: var(--surface2);
+  }
+
+  .asset-info {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .asset-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 0.85rem;
+    letter-spacing: 0.05em;
+    flex-shrink: 0;
+  }
+
+  .asset-name {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  .asset-ticker {
+    font-size: 0.65rem;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    margin-top: 2px;
+  }
+
+  .cell {
+    font-size: 0.8rem;
+  }
+
+  .pnl-bar-wrap {
+    height: 3px;
+    background: var(--border);
+    margin-top: 4px;
+    width: 60px;
+  }
+
+  .pnl-bar {
+    height: 100%;
+    transition: width 0.5s ease;
+  }
+
+  .delete-btn {
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 1rem;
+    line-height: 1;
+    padding: 4px;
+    transition: color 0.2s;
+  }
+
+  .delete-btn:hover { color: var(--red); }
+
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--muted);
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    border: 1px dashed var(--border);
+    background: var(--surface);
+  }
+
+  .empty-state .empty-icon {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 3rem;
+    color: var(--border);
+    display: block;
+    margin-bottom: 12px;
+    letter-spacing: 0.2em;
+  }
+
+  /* Allocation bar */
+  .allocation {
+    margin-top: 40px;
+    animation: fadeUp 0.6s 0.3s ease both;
+  }
+
+  .alloc-bar {
+    display: flex;
+    height: 8px;
+    overflow: hidden;
+    gap: 2px;
+    margin-bottom: 16px;
+  }
+
+  .alloc-segment {
+    height: 100%;
+    transition: width 0.5s ease;
+  }
+
+  .alloc-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.65rem;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+  }
+
+  .legend-dot {
+    width: 8px;
+    height: 8px;
+    flex-shrink: 0;
+  }
+
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 20px 40px;
+    margin-top: 60px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.6rem;
+    color: var(--muted);
+    letter-spacing: 0.15em;
+  }
+
+  .footer-logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1rem;
+    color: var(--gold-dim);
+    letter-spacing: 0.2em;
+  }
+
+  @media (max-width: 768px) {
+    main { padding: 20px; }
+    header { padding: 16px 20px; }
+    .summary { grid-template-columns: 1fr 1fr; }
+    .add-form { grid-template-columns: 1fr 1fr; }
+    .table-header, .holding-row { grid-template-columns: 2fr 1fr 1fr 30px; }
+    .table-header .col-hide, .holding-row .col-hide { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    EMPIRE
+    <span>PORTFOLIO TRACKER</span>
+  </div>
+  <div class="header-right">
+    <div class="live-badge">
+      <div class="live-dot"></div>
+      Live Prices
+    </div>
+    <div style="font-size:0.65rem;color:var(--muted);letter-spacing:0.1em;" id="last-updated">—</div>
+  </div>
+</header>
+
+<main>
+
+  <!-- Summary Cards -->
+  <div class="summary">
+    <div class="summary-card">
+      <div class="card-label">Total Portfolio Value</div>
+      <div class="card-value big" id="total-value">$0.00</div>
+      <div class="card-sub" id="total-change-usd">—</div>
+    </div>
+    <div class="summary-card">
+      <div class="card-label">24h Change</div>
+      <div class="card-value" id="total-change-pct">—</div>
+      <div class="card-sub">vs yesterday</div>
+    </div>
+    <div class="summary-card">
+      <div class="card-label">Best Performer</div>
+      <div class="card-value" id="best-asset">—</div>
+      <div class="card-sub" id="best-pct">—</div>
+    </div>
+    <div class="summary-card">
+      <div class="card-label">Assets Held</div>
+      <div class="card-value" id="asset-count">0</div>
+      <div class="card-sub">positions</div>
+    </div>
+  </div>
+
+  <!-- Add Asset -->
+  <div class="add-section">
+    <div class="section-title">// Add Position</div>
+    <div class="add-form">
+      <select id="coin-select">
+        <option value="">Select Asset</option>
+        <option value="bitcoin">Bitcoin (BTC)</option>
+        <option value="ethereum">Ethereum (ETH)</option>
+        <option value="solana">Solana (SOL)</option>
+        <option value="binancecoin">BNB</option>
+        <option value="ripple">XRP</option>
+        <option value="cardano">Cardano (ADA)</option>
+        <option value="avalanche-2">Avalanche (AVAX)</option>
+        <option value="chainlink">Chainlink (LINK)</option>
+        <option value="polkadot">Polkadot (DOT)</option>
+        <option value="dogecoin">Dogecoin (DOGE)</option>
+      </select>
+      <input type="number" id="amount-input" placeholder="Amount held" min="0" step="any" />
+      <input type="number" id="buy-price-input" placeholder="Avg buy price ($)" min="0" step="any" />
+      <button class="btn" onclick="addAsset()">ADD</button>
+    </div>
+  </div>
+
+  <!-- Holdings -->
+  <div class="holdings">
+    <div class="section-title">// Holdings</div>
+    <div class="table-header">
+      <div>Asset</div>
+      <div>Price</div>
+      <div class="col-hide">Holdings</div>
+      <div>Value</div>
+      <div class="col-hide">P&L</div>
+      <div></div>
+    </div>
+    <div id="holdings-list">
+      <div class="empty-state">
+        <span class="empty-icon">EMPIRE</span>
+        Add your first position above to begin tracking
+      </div>
+    </div>
+  </div>
+
+  <!-- Allocation -->
+  <div class="allocation" id="allocation-section" style="display:none">
+    <div class="section-title">// Allocation</div>
+    <div class="alloc-bar" id="alloc-bar"></div>
+    <div class="alloc-legend" id="alloc-legend"></div>
+  </div>
+
+</main>
+
+<footer>
+  <div class="footer-logo">EMPIRE</div>
+  <div>PRICES VIA COINGECKO API · NOT FINANCIAL ADVICE</div>
+  <div id="footer-count">0 POSITIONS</div>
+</footer>
+
+<script>
+  // Asset color palette
+  const COLORS = [
+    '#C9A84C','#4caf7d','#5b8dee','#e05454','#9c6fe4',
+    '#f0a050','#50c8c8','#e06090','#80b040','#c04080'
+  ];
+
+  const COIN_META = {
+    bitcoin:      { name: 'Bitcoin',   ticker: 'BTC', initials: 'BTC' },
+    ethereum:     { name: 'Ethereum',  ticker: 'ETH', initials: 'ETH' },
+    solana:       { name: 'Solana',    ticker: 'SOL', initials: 'SOL' },
+    binancecoin:  { name: 'BNB',       ticker: 'BNB', initials: 'BNB' },
+    ripple:       { name: 'XRP',       ticker: 'XRP', initials: 'XRP' },
+    cardano:      { name: 'Cardano',   ticker: 'ADA', initials: 'ADA' },
+    'avalanche-2':{ name: 'Avalanche', ticker: 'AVAX',initials: 'AVX' },
+    chainlink:    { name: 'Chainlink', ticker: 'LINK',initials: 'LNK' },
+    polkadot:     { name: 'Polkadot',  ticker: 'DOT', initials: 'DOT' },
+    dogecoin:     { name: 'Dogecoin',  ticker: 'DOGE',initials: 'DGE' },
+  };
+
+  let portfolio = JSON.parse(localStorage.getItem('empire_portfolio') || '[]');
+  let prices = {};
+  let colorIndex = 0;
+
+  function save() {
+    localStorage.setItem('empire_portfolio', JSON.stringify(portfolio));
+  }
+
+  function fmt(n, decimals = 2) {
+    if (n === undefined || n === null || isNaN(n)) return '—';
+    return n.toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+  }
+
+  function fmtUSD(n) {
+    if (!n && n !== 0) return '—';
+    return '$' + fmt(n);
+  }
+
+  async function fetchPrices() {
+    if (!portfolio.length) return;
+    const ids = [...new Set(portfolio.map(p => p.coinId))].join(',');
+    try {
+      const res = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd&include_24hr_change=true`);
+      const data = await res.json();
+      prices = data;
+      document.getElementById('last-updated').textContent = 'Updated ' + new Date().toLocaleTimeString();
+      render();
+    } catch(e) {
+      // Use cached/demo prices if API fails
+      render();
+    }
+  }
+
+  function addAsset() {
+    const coinId = document.getElementById('coin-select').value;
+    const amount = parseFloat(document.getElementById('amount-input').value);
+    const buyPrice = parseFloat(document.getElementById('buy-price-input').value);
+
+    if (!coinId || isNaN(amount) || amount <= 0) {
+      alert('Please select an asset and enter a valid amount.');
+      return;
+    }
+
+    const existing = portfolio.find(p => p.coinId === coinId);
+    if (existing) {
+      existing.amount += amount;
+      if (!isNaN(buyPrice) && buyPrice > 0) {
+        existing.buyPrice = ((existing.buyPrice * (existing.amount - amount)) + (buyPrice * amount)) / existing.amount;
+      }
+    } else {
+      portfolio.push({
+        coinId,
+        amount,
+        buyPrice: isNaN(buyPrice) ? 0 : buyPrice,
+        color: COLORS[colorIndex % COLORS.length],
+        addedAt: Date.now()
+      });
+      colorIndex++;
+    }
+
+    save();
+    document.getElementById('coin-select').value = '';
+    document.getElementById('amount-input').value = '';
+    document.getElementById('buy-price-input').value = '';
+    fetchPrices();
+  }
+
+  function removeAsset(coinId) {
+    portfolio = portfolio.filter(p => p.coinId !== coinId);
+    save();
+    render();
+  }
+
+  function render() {
+    const list = document.getElementById('holdings-list');
+    
+    if (!portfolio.length) {
+      list.innerHTML = `<div class="empty-state"><span class="empty-icon">EMPIRE</span>Add your first position above to begin tracking</div>`;
+      document.getElementById('total-value').textContent = '$0.00';
+      document.getElementById('total-change-pct').textContent = '—';
+      document.getElementById('total-change-usd').textContent = '—';
+      document.getElementById('best-asset').textContent = '—';
+      document.getElementById('best-pct').textContent = '—';
+      document.getElementById('asset-count').textContent = '0';
+      document.getElementById('footer-count').textContent = '0 POSITIONS';
+      document.getElementById('allocation-section').style.display = 'none';
+      return;
+    }
+
+    let totalValue = 0;
+    let totalCost = 0;
+    let bestAsset = null, bestChange = -Infinity;
+
+    const rows = portfolio.map((pos, i) => {
+      const meta = COIN_META[pos.coinId] || { name: pos.coinId, ticker: pos.coinId.toUpperCase(), initials: '?' };
+      const priceData = prices[pos.coinId];
+      const currentPrice = priceData?.usd || 0;
+      const change24h = priceData?.usd_24h_change || 0;
+      const value = currentPrice * pos.amount;
+      const cost = pos.buyPrice * pos.amount;
+      const pnl = pos.buyPrice > 0 ? value - cost : null;
+      const pnlPct = pos.buyPrice > 0 ? ((value - cost) / cost) * 100 : null;
+
+      totalValue += value;
+      if (pos.buyPrice > 0) totalCost += cost;
+
+      if (change24h > bestChange) {
+        bestChange = change24h;
+        bestAsset = meta.ticker;
+      }
+
+      const pnlColor = pnl === null ? 'var(--muted)' : pnl >= 0 ? 'var(--green)' : 'var(--red)';
+      const changeColor = change24h >= 0 ? 'var(--green)' : 'var(--red)';
+      const changeSign = change24h >= 0 ? '+' : '';
+
+      return `
+        <div class="holding-row" style="animation-delay:${i*0.05}s">
+          <div class="asset-info">
+            <div class="asset-icon" style="background:${pos.color}22;color:${pos.color};border:1px solid ${pos.color}44">
+              ${meta.initials}
+            </div>
+            <div>
+              <div class="asset-name">${meta.name}</div>
+              <div class="asset-ticker">${meta.ticker}</div>
+            </div>
+          </div>
+          <div class="cell">
+            <div>${currentPrice > 0 ? fmtUSD(currentPrice) : '—'}</div>
+            <div style="font-size:0.65rem;color:${changeColor}">${currentPrice > 0 ? changeSign + fmt(change24h) + '%' : ''}</div>
+          </div>
+          <div class="cell col-hide">
+            <div>${fmt(pos.amount, 4)} ${meta.ticker}</div>
+            <div style="font-size:0.65rem;color:var(--muted)">@ ${pos.buyPrice > 0 ? fmtUSD(pos.buyPrice) : '—'}</div>
+          </div>
+          <div class="cell">
+            <div>${currentPrice > 0 ? fmtUSD(value) : '—'}</div>
+          </div>
+          <div class="cell col-hide" style="color:${pnlColor}">
+            ${pnl !== null && currentPrice > 0 ? (pnl >= 0 ? '+' : '') + fmtUSD(pnl) : '—'}
+            ${pnlPct !== null && currentPrice > 0 ? `<div style="font-size:0.65rem">${pnlPct >= 0 ? '+' : ''}${fmt(pnlPct)}%</div>` : ''}
+          </div>
+          <div>
+            <button class="delete-btn" onclick="removeAsset('${pos.coinId}')">✕</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    list.innerHTML = rows;
+
+    // Summary
+    document.getElementById('total-value').textContent = fmtUSD(totalValue);
+    document.getElementById('asset-count').textContent = portfolio.length;
+    document.getElementById('footer-count').textContent = portfolio.length + ' POSITION' + (portfolio.length !== 1 ? 'S' : '');
+
+    if (bestAsset) {
+      document.getElementById('best-asset').textContent = bestAsset;
+      const bSign = bestChange >= 0 ? '+' : '';
+      document.getElementById('best-pct').textContent = bSign + fmt(bestChange) + '% (24h)';
+    }
+
+    // 24h portfolio change estimate
+    if (totalValue > 0) {
+      let weightedChange = 0;
+      portfolio.forEach(pos => {
+        const priceData = prices[pos.coinId];
+        const currentPrice = priceData?.usd || 0;
+        const change = priceData?.usd_24h_change || 0;
+        const val = currentPrice * pos.amount;
+        weightedChange += (val / totalValue) * change;
+      });
+      const sign = weightedChange >= 0 ? '+' : '';
+      const color = weightedChange >= 0 ? 'var(--green)' : 'var(--red)';
+      document.getElementById('total-change-pct').innerHTML = `<span style="color:${color}">${sign}${fmt(weightedChange)}%</span>`;
+      const changeUSD = totalValue * (weightedChange / 100);
+      document.getElementById('total-change-usd').innerHTML = `<span style="color:${color}">${changeUSD >= 0 ? '+' : ''}${fmtUSD(changeUSD)} today</span>`;
+    }
+
+    // Allocation bar
+    if (totalValue > 0) {
+      document.getElementById('allocation-section').style.display = 'block';
+      const bar = document.getElementById('alloc-bar');
+      const legend = document.getElementById('alloc-legend');
+      bar.innerHTML = portfolio.map(pos => {
+        const priceData = prices[pos.coinId];
+        const val = (priceData?.usd || 0) * pos.amount;
+        const pct = totalValue > 0 ? (val / totalValue) * 100 : 0;
+        return `<div class="alloc-segment" style="width:${pct}%;background:${pos.color}"></div>`;
+      }).join('');
+
+      legend.innerHTML = portfolio.map(pos => {
+        const meta = COIN_META[pos.coinId] || { ticker: pos.coinId.toUpperCase() };
+        const priceData = prices[pos.coinId];
+        const val = (priceData?.usd || 0) * pos.amount;
+        const pct = totalValue > 0 ? (val / totalValue) * 100 : 0;
+        return `<div class="legend-item">
+          <div class="legend-dot" style="background:${pos.color}"></div>
+          ${meta.ticker} · ${fmt(pct)}%
+        </div>`;
+      }).join('');
+    }
+  }
+
+  // Init
+  render();
+  if (portfolio.length) fetchPrices();
+  setInterval(fetchPrices, 60000); // refresh every minute
+</script>
+</body>
+</html>
